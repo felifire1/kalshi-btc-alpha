@@ -353,9 +353,6 @@ with tab1:
     color_map  = {"BUY YES": "#00C48C", "BUY NO": "#E74C3C", "SKIP": "#888A99"}
     color = color_map[final_signal]
 
-    if not artifacts_ok:
-        st.info("ℹ️  ML model not loaded — showing rule-based signal (momentum + BTC position). "
-                "Run `python3 main.py` locally and redeploy to enable full ML confidence scores.")
 
     sig_col, detail_col = st.columns([1, 2])
 

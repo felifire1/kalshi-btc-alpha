@@ -14,7 +14,6 @@ Strategy:
 import os
 import pandas as pd
 import numpy as np
-import duckdb
 
 REPO_DATA    = os.path.expanduser("~/Desktop/prediction-market-analysis/data/kalshi")
 MARKETS_GLOB = os.path.join(REPO_DATA, "markets", "*.parquet")
@@ -30,6 +29,7 @@ def load_btc_dataset() -> pd.DataFrame:
 
     Returns one row per market.
     """
+    import duckdb
     print("Building BTC dataset from real trades...")
     con = duckdb.connect()
 

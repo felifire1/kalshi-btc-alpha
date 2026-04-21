@@ -336,24 +336,24 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-            if final_signal != "SKIP":
-                tc = 0.005
-                if final_signal == "BUY YES":
-                    effective_entry = entry_est + tc
-                    breakeven = effective_entry
-                else:
-                    effective_entry = (1 - entry_est) + tc
-                    breakeven = effective_entry
+    if final_signal != "SKIP":
+        tc = 0.005
+        if final_signal == "BUY YES":
+            effective_entry = entry_est + tc
+            breakeven = effective_entry
+        else:
+            effective_entry = (1 - entry_est) + tc
+            breakeven = effective_entry
 
-                exp_pnl = (0.64 - effective_entry) * position_size
-                st.markdown(f"""
-                <div class="info-card" style="border-left-color:#F5A623;">
-                  <b>Position size:</b> ${position_size}  &nbsp;|&nbsp;
-                  <b>Entry price:</b> {effective_entry:.2f}  &nbsp;|&nbsp;
-                  <b>Break-even win rate:</b> {breakeven:.1%}<br>
-                  <b>Expected P&L</b> (at 64% model win rate): <span style="color:#00C48C"><b>${exp_pnl:+.2f}</b></span>
-                </div>
-                """, unsafe_allow_html=True)
+        exp_pnl = (0.64 - effective_entry) * position_size
+        st.markdown(f"""
+        <div class="info-card" style="border-left-color:#F5A623;">
+          <b>Position size:</b> ${position_size}  &nbsp;|&nbsp;
+          <b>Entry price:</b> {effective_entry:.2f}  &nbsp;|&nbsp;
+          <b>Break-even win rate:</b> {breakeven:.1%}<br>
+          <b>Expected P&L</b> (at 64% model win rate): <span style="color:#00C48C"><b>${exp_pnl:+.2f}</b></span>
+        </div>
+        """, unsafe_allow_html=True)
 
         # ── Nearby strikes scanner ────────────────────────────────────────────
     st.divider()

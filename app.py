@@ -16,6 +16,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import requests
 import yfinance as yf
 from datetime import datetime, timezone, timedelta
 from PIL import Image
@@ -84,33 +85,86 @@ def load_artifacts():
     return joblib.load(path)
 
 
+def _compute_features_from_series(closes: pd.Series):
+    """Compute momentum/vol/RSI from a price series."""
+    def _rsi(s, w=336):
+        d = s.diff()
+        g = d.clip(lower=0).rolling(w, min_periods=14).mean()
+        l = (-d.clip(upper=0)).rolling(w, min_periods=14).mean()
+        rs = g / l.replace(0, np.nan)
+        return float((100 - 100 / (1 + rs)).iloc[-1])
+
+    ret_1h = closes.pct_change(1)
+    return {
+        "ret_1d": float(closes.pct_change(24).iloc[-1]),
+        "ret_3d": float(closes.pct_change(72).iloc[-1]),
+        "ret_7d": float(closes.pct_change(168).iloc[-1]),
+        "vol_1d": float(ret_1h.rolling(24).std().iloc[-1]),
+        "vol_7d": float(ret_1h.rolling(168).std().iloc[-1]),
+        "rsi":    _rsi(closes),
+    }
+
+
 @st.cache_data(ttl=300, show_spinner="Fetching BTC price…")
 def fetch_btc():
-    """Return latest BTC price + recent momentum features."""
-    btc = yf.download("BTC-USD", period="30d", interval="1h", progress=False)
-    btc.columns = [c[0].lower() if isinstance(c, tuple) else c.lower() for c in btc.columns]
-    if btc.empty:
-        return None, {}
+    """Return latest BTC price + momentum features.
+    Tries yfinance first, falls back to CoinGecko public API."""
 
-    price  = float(btc["close"].iloc[-1])
-    ret_1d = float(btc["close"].pct_change(24).iloc[-1])
-    ret_3d = float(btc["close"].pct_change(72).iloc[-1])
-    ret_7d = float(btc["close"].pct_change(168).iloc[-1])
+    # ── Attempt 1: yfinance ───────────────────────────────────────────────────
+    try:
+        btc = yf.download("BTC-USD", period="30d", interval="1h", progress=False, auto_adjust=True)
+        btc.columns = [c[0].lower() if isinstance(c, tuple) else c.lower() for c in btc.columns]
+        if not btc.empty and len(btc) > 50:
+            price = float(btc["close"].iloc[-1])
+            feats = _compute_features_from_series(btc["close"])
+            return price, feats
+    except Exception:
+        pass
 
-    def _rsi(s, w=336):
-        d = s.diff(); g = d.clip(lower=0).rolling(w).mean()
-        l = (-d.clip(upper=0)).rolling(w).mean()
-        return float((100 - 100 / (1 + g / l.replace(0, np.nan))).iloc[-1])
+    # ── Attempt 2: CoinGecko public API (no key needed) ───────────────────────
+    try:
+        # Current price
+        r = requests.get(
+            "https://api.coingecko.com/api/v3/simple/price",
+            params={"ids": "bitcoin", "vs_currencies": "usd"},
+            timeout=10
+        )
+        price = float(r.json()["bitcoin"]["usd"])
 
-    vol_1d  = float(btc["close"].pct_change(1).rolling(24).std().iloc[-1])
-    vol_7d  = float(btc["close"].pct_change(1).rolling(168).std().iloc[-1])
-    rsi_val = _rsi(btc["close"])
+        # Hourly history for the last 30 days
+        r2 = requests.get(
+            "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart",
+            params={"vs_currency": "usd", "days": "30", "interval": "hourly"},
+            timeout=15
+        )
+        data = r2.json()
+        if "prices" in data and len(data["prices"]) > 50:
+            closes = pd.Series(
+                [p[1] for p in data["prices"]],
+                index=pd.to_datetime([p[0] for p in data["prices"]], unit="ms", utc=True)
+            )
+            feats = _compute_features_from_series(closes)
+        else:
+            feats = {"ret_1d": 0, "ret_3d": 0, "ret_7d": 0,
+                     "vol_1d": 0.002, "vol_7d": 0.002, "rsi": 50.0}
+        return price, feats
+    except Exception:
+        pass
 
-    features = {
-        "ret_1d": ret_1d, "ret_3d": ret_3d, "ret_7d": ret_7d,
-        "vol_1d": vol_1d, "vol_7d": vol_7d, "rsi": rsi_val,
-    }
-    return price, features
+    # ── Attempt 3: Binance public API ─────────────────────────────────────────
+    try:
+        r = requests.get(
+            "https://api.binance.com/api/v3/ticker/price",
+            params={"symbol": "BTCUSDT"}, timeout=8
+        )
+        price = float(r.json()["price"])
+        feats = {"ret_1d": 0, "ret_3d": 0, "ret_7d": 0,
+                 "vol_1d": 0.002, "vol_7d": 0.002, "rsi": 50.0}
+        return price, feats
+    except Exception:
+        pass
+
+    return None, {}
 
 
 def make_feature_vector(btc_price, strike, btc_feats, artifacts):

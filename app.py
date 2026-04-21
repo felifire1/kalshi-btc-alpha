@@ -288,7 +288,7 @@ with tab1:
             "Strike Price ($)",
             min_value=10_000.0,
             max_value=500_000.0,
-            value=round(btc_price / 1000) * 1000,
+            value=float(round(btc_price / 1000) * 1000),
             step=500.0,
             format="%.0f",
             help="The BTC threshold from the Kalshi market — e.g. 'Will BTC close above $95,000?'"

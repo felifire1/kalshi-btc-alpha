@@ -466,7 +466,7 @@ with tab1:
             return "color: #888A99"
 
         st.dataframe(
-            scan_df.style.applymap(color_signal, subset=["Signal", "Direction"]),
+            scan_df.style.map(color_signal, subset=["Signal", "Direction"]),
             use_container_width=True, hide_index=True
         )
 
@@ -537,7 +537,7 @@ with tab2:
                                    "model_prob":"Model Conf","resolved_yes":"Resolved YES",
                                    "pnl":"P&L","pnl_pct":"Return %","profitable":"Win"})
                   .style
-                  .applymap(color_pnl, subset=["P&L","Return %"]))
+                  .map(color_pnl, subset=["P&L","Return %"]))
 
         st.dataframe(styled, use_container_width=True, hide_index=True)
 

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.env
+.venv
+env/
+
+# Data (50GB Kalshi dataset stays local)
+data/
+*.parquet
+*.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Large training artifacts (keep model_artifacts.joblib since it's small)
+# Uncomment below if joblib ends up >50MB:
+# output/model_artifacts.joblib

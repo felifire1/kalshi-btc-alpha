@@ -349,10 +349,12 @@ with tab1:
         final_signal = direction if entry_near else "SKIP"
 
     # ── Signal display ────────────────────────────────────────────────────
-    css_class = {"BUY YES": "signal-buy", "BUY NO": "signal-sell", "SKIP": "signal-skip"}[final_signal]
-    color_map  = {"BUY YES": "#00C48C", "BUY NO": "#E74C3C", "SKIP": "#888A99"}
-    color = color_map[final_signal]
-
+    bg_map     = {"BUY YES": "#0d3b2e", "BUY NO": "#3b1414",  "SKIP": "#2a2d3a"}
+    border_map = {"BUY YES": "#00C48C", "BUY NO": "#E74C3C",  "SKIP": "#555555"}
+    color_map  = {"BUY YES": "#00C48C", "BUY NO": "#E74C3C",  "SKIP": "#888A99"}
+    sig_bg     = bg_map[final_signal]
+    sig_border = border_map[final_signal]
+    color      = color_map[final_signal]
 
     sig_col, detail_col = st.columns([1, 2])
 
@@ -361,7 +363,8 @@ with tab1:
                      if artifacts_ok else
                      "<span style='color:#888A99'>Rule-based signal</span>")
         st.markdown(f"""
-        <div class="{css_class}">
+        <div style="background:{sig_bg};border:2px solid {sig_border};border-radius:12px;
+                    padding:24px 32px;text-align:center;">
           <div style="font-size:13px;color:#888A99;margin-bottom:6px;">MODEL SIGNAL</div>
           <div style="font-size:42px;font-weight:900;color:{color};">{final_signal}</div>
           <div style="font-size:13px;color:#888A99;margin-top:8px;">{conf_line}</div>
@@ -455,17 +458,17 @@ with tab1:
         }
         rows.append(row)
 
-        scan_df = pd.DataFrame(rows)
+    scan_df = pd.DataFrame(rows)
 
-        def color_signal(val):
-            if val == "BUY YES": return "color: #00C48C; font-weight: bold"
-            if val == "BUY NO":  return "color: #E74C3C; font-weight: bold"
-            return "color: #888A99"
+    def color_signal(val):
+        if val == "BUY YES": return "color: #00C48C; font-weight: bold"
+        if val == "BUY NO":  return "color: #E74C3C; font-weight: bold"
+        return "color: #888A99"
 
-        st.dataframe(
-            scan_df.style.map(color_signal, subset=["Signal", "Direction"]),
-            use_container_width=True, hide_index=True
-        )
+    st.dataframe(
+        scan_df.style.map(color_signal, subset=["Signal", "Direction"]),
+        use_container_width=True, hide_index=True
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════

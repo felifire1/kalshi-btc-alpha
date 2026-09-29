@@ -1,4 +1,4 @@
-# Kalshi BTC Alpha
+# Kalshi BTC Arbitrage
 
 **Finding mispriced Kalshi Bitcoin contracts with Black-Scholes and machine learning.**
 
